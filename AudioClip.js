@@ -1,51 +1,107 @@
 var AudioClip = function(options){
-  var defaults = {
-    autoLoad : true,
-    autoPlay : true,
-  }
+	var defaults = {
+		autoLoad : true,
+		autoPlay : true,
+	}
 
-  var that = {};
-  var self = this;
+	var clip = {};
 
-  if (typeof options == 'string'){
-    // optionally accept just source string
-    options = {src : options};
-  } else {
-    // assume options is an object with the appropriate settings
-  }
-  for(var i in defaults ) {
-    if(buzz.defaults.hasOwnProperty(i)) {
-      options[ i ] = options[ i ] || buzz.defaults[ i ];
-    }
-  }
+	//
+	// Init
+	//
+	clip.audio = document.createElement('audio');
 
-  that.addListener = function(){}
+	if (typeof options == 'string'){
+		// optionally accept just source string
+		// which should specify format
+		clip.audio.src = options;
+		options = {};
+	} else {
+		if (!(options.formats && options.formats.length)){
+			clip.audio.src = options.src;
+		} else {
+			// I'm not sure if I should do support checking, or if html
+			// wants to handle that itself.
+			for (var i in options.formats) {
+				var source = document.createElement('source');
+				source.src = options.src + '.' + options.formats[i];
+				clip.audio.appendChild(source);
+			}
+		}
+	}
+	for (var i in defaults) {
+		if (defaults.hasOwnProperty(i)) {
+			options[i] = options[i] || defaults[i];
+		}
+	}
 
-  that.play = function(){}
-  that.pause = function(){}
-  that.stop = function(clean){}
-  that.unload = function(){}
+	if (options.autoplay) {
+		clip.audio.autoplay = 'autoplay';
+	}
+	clip.audio.preload = 'auto';
 
-  /* private functions */
-  self.isSupported = function() {
-      return !!self.audio.canPlayType;
-  }
+	// bind events
+	var audioEvents = {
+		'playing' : 'play',
+		'pause' : 'pause',
+		'ended' : 'complete',
+	};
+	for (var e in audioEvents) {
+		clip.audio.addEventListener(e, function(){
+			clip.dispatchEvent(audioEvents[e], arguments);
+		})
+	}
 
-  self.isOGGSupported = function() {
-      return !!self.audio.canPlayType && self.audio.canPlayType( 'audio/ogg; codecs="vorbis"' );
-  }
+	// set up clip event handlers
+	clip.events = {};
 
-  self.isWAVSupported = function() {
-      return !!self.audio.canPlayType && self.audio.canPlayType( 'audio/wav; codecs="1"' );
-  }
+	clip.addListener = function(event, cb){
+		if (clip.events[event] && clip.events[event].length) {
+			clip.events[event].push(cb);
+		} else {
+			clip.events[event] = [cb];
+		}
+	}
 
-  self.isMP3Supported = function() {
-      return !!self.audio.canPlayType && self.audio.canPlayType( 'audio/mpeg;' );
-  }
+	clip.dispatchEvent = function(event, args){
+		var listeners = clip.events[event];
+		if (listeners && listeners.length) {
+			for (var i in listeners) {
+				listeners[i].apply(this, args);
+			}
+		}
+	}
 
-  self.isAACSupported = function() {
-      return !!self.audio.canPlayType && ( self.audio.canPlayType( 'audio/x-m4a;' ) || self.audio.canPlayType( 'audio/aac;' ) );
-  }
+	clip.play = function(){
+		clip.audio.play();
+	}
+	clip.pause = function(){
+		clip.audio.pause();
+	}
+	clip.stop = function(clean){}
+	clip.unload = function(){}
 
-  return that;
+	// various support functions ... I don't know how many of these are
+	// actually necessary
+	clip.isHtml5Supported = function() {
+		return !!clip.audio.canPlayType;
+	}
+
+	clip.isOGGSupported = function() {
+		return !!clip.audio.canPlayType && clip.audio.canPlayType( 'audio/ogg; codecs="vorbis"' );
+	}
+
+	clip.isWAVSupported = function() {
+		return !!clip.audio.canPlayType && clip.audio.canPlayType( 'audio/wav; codecs="1"' );
+	}
+
+	clip.isMP3Supported = function() {
+		return !!clip.audio.canPlayType && clip.audio.canPlayType( 'audio/mpeg;' );
+	}
+
+	clip.isAACSupported = function() {
+		return !!clip.audio.canPlayType && ( clip.audio.canPlayType( 'audio/x-m4a;' ) || clip.audio.canPlayType( 'audio/aac;' ) );
+	}
+
+	return clip;
 };

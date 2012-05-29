@@ -1,0 +1,26 @@
+<html>
+	<head>
+		<script src="./AudioClip.js"></script>
+		<script>
+			var clip = AudioClip({
+				'src' : './test',
+				'formats' : ['mp3', 'ogg'],
+			});
+		
+			clip.addListener('ended', function(){
+				console.log(arguments);
+			})
+
+			setTimeout(function(){
+				clip.play();
+			}, 2000);
+
+			setTimeout(function(){
+				clip.play();
+			}, 8000);
+		</script>
+	</head>
+	<body>
+		Huzzah!
+	</body>
+</html>
