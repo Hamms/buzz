@@ -5,19 +5,22 @@
 			var clip = AudioClip({
 				'src' : './test',
 				'formats' : ['mp3', 'ogg'],
+				'events' : {
+					'complete' : function(e){
+						console.log('first');
+					},
+					'play' : function(e){
+						console.log('play');
+					},
+				},
+				'autoPlay' : false,
 			});
 		
-			clip.addListener('ended', function(){
-				console.log(arguments);
+			clip.addListener('complete', function(e){
+				console.log('second');
 			})
-
-			setTimeout(function(){
-				clip.play();
-			}, 2000);
-
-			setTimeout(function(){
-				clip.play();
-			}, 8000);
+			
+			clip.play();
 		</script>
 	</head>
 	<body>
